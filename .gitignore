@@ -1,0 +1,26 @@
+# User uploads
+uploads/
+
+# Test & utility files
+info.php
+test_db_connection.php
+convert_quiz_to_pdo.php
+generate-hash.php
+generate_hash.php
+
+# Backup / copy files
+dash-dosen - Copy.php
+
+# Large SQL fix files
+database/database_fix*.sql
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+
+# Agents config
+.agents/
