@@ -1,12 +1,7 @@
 <?php
-session_start();
+include 'middleware.php';
 include 'db_connection.php';
-
-// Cek apakah pengguna sudah login dan memiliki peran 'student'
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    header("Location: login.php");
-    exit();
-}
+require_role('student');
 $current_student_id = $_SESSION['user_id'];
 
 // Ambil course_id dari URL

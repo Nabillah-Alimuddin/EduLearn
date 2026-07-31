@@ -1,14 +1,10 @@
 <?php
 // nilai.php
-session_start();
+include 'middleware.php';
 include 'db_connection.php';
 include 'helpers.php'; 
+require_role('student');
 
-// Cek apakah pengguna sudah login sebagai mahasiswa
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    $_SESSION['user_id'] = 1; // Simulasi ID Mahasiswa
-    $_SESSION['role'] = 'student';
-}
 $current_student_id = $_SESSION['user_id'];
 
 // Ambil Data Mahasiswa

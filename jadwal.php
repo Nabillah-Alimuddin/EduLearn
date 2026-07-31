@@ -1,12 +1,7 @@
 <?php
-session_start(); // Mulai sesi
-include 'db_connection.php'; // Sertakan file koneksi database
-
-// Periksa apakah pengguna sudah login dan memiliki peran 'student'
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    header("Location: login.html"); // Redirect ke halaman login jika belum login atau bukan mahasiswa
-    exit();
-}
+include 'middleware.php';
+include 'db_connection.php';
+require_role('student');
 
 // Ambil user_id mahasiswa dari sesi
 $current_student_id = $_SESSION['user_id']; 

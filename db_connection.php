@@ -1,18 +1,39 @@
 <?php
-// db_connection.php
+// db_connection.php — Koneksi database terpusat
+// Semua credentials dibaca dari .env via config.php
 
-$servername = "aws-0-ap-southeast-1.pooler.supabase.com";
-$port = "5432";
-$username = "postgres.chnpfhzdigypbpnbztkm";
-$password = "elearning111211-A";
-$dbname = "postgres";
+// Cegah double-include
+if (isset($conn) && $conn instanceof PDO) {
+    return;
+}
+
+// Load konfigurasi & error handler
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/error_handler.php';
+
+// Validasi konfigurasi database
+if (empty(DB_HOST) || empty(DB_USER) || empty(DB_PASSWORD)) {
+    show_error('Konfigurasi database tidak lengkap. Periksa file .env');
+}
 
 try {
-    $conn = new PDO("pgsql:host=$servername;port=$port;dbname=$dbname;sslmode=require", $username, $password);
-    // Set the PDO error mode to exception
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $dsn = sprintf(
+        "pgsql:host=%s;port=%s;dbname=%s;sslmode=%s",
+        DB_HOST, DB_PORT, DB_NAME, DB_SSLMODE
+    );
+    
+    $conn = new PDO($dsn, DB_USER, DB_PASSWORD, [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ]);
+    
 } catch (PDOException $e) {
-    die("Koneksi database gagal: " . $e->getMessage());
+    log_error('Database connection failed', [
+        'host'    => DB_HOST,
+        'dbname'  => DB_NAME,
+        'message' => $e->getMessage()
+    ]);
+    show_error('Koneksi database gagal. Silakan coba lagi nanti.');
 }
 ?>

@@ -1,3 +1,10 @@
+# Environment variables (CREDENTIALS - NEVER COMMIT!)
+.env
+!.env.example
+
+# Log files
+logs/
+
 # User uploads
 uploads/
 

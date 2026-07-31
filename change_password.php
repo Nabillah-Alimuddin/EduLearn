@@ -1,26 +1,18 @@
 <?php
-session_start();
 ob_start();
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
+include 'middleware.php';
 include 'db_connection.php';
+require_api_auth('student');
 
-header('Content-Type: application/json');
-
-function send_json_error($message) {
-    echo json_encode(['success' => false, 'error' => $message]);
-    exit();
-}
+$current_student_id = $_SESSION['user_id'];
 
 $input = json_decode(file_get_contents('php://input'), true);
 
-$current_student_id = $input['user_id'] ?? null;
 $old_password = $input['old_password'] ?? null;
 $new_password = $input['new_password'] ?? null;
 
-if (!$current_student_id || !$old_password || !$new_password) {
-    send_json_error("Invalid or incomplete data.");
+if (!$old_password || !$new_password) {
+    json_error("Data tidak lengkap.");
 }
 
 $conn->beginTransaction();
@@ -50,11 +42,11 @@ try {
     $stmt_update_password->execute([$new_password_hash, $current_student_id]);
 
     $conn->commit();
-    echo json_encode(['success' => true, 'message' => 'Password changed successfully.']);
+    json_success('Password berhasil diubah.');
 
 } catch (Exception $e) {
     $conn->rollBack();
-    send_json_error($e->getMessage());
+    json_error($e->getMessage());
 }
 
 $conn = null;
