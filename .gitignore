@@ -8,6 +8,9 @@ logs/
 # User uploads
 uploads/
 
+# Procedural Backup files
+_backup_procedural/
+
 # Test & utility files
 info.php
 test_db_connection.php

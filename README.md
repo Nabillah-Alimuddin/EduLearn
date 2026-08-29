@@ -1,12 +1,12 @@
 # 🎓 EduLearn — Modern Higher Education Learning Management System (LMS)
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/)
+[![Architecture](https://img.shields.io/badge/Architecture-Custom%20MVC-ff69b4?style=for-the-badge&logo=php)](index.php)
 [![Database](https://img.shields.io/badge/PostgreSQL-14%2B-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Cloud DB](https://img.shields.io/badge/Supabase-Supported-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![Security](https://img.shields.io/badge/CSRF%20%26%20PDO-Protected-brightgreen?style=for-the-badge&logo=shield)](middleware.php)
+[![Security](https://img.shields.io/badge/CSRF%20%26%20PDO-Protected-brightgreen?style=for-the-badge&logo=shield)](app/Core/Middleware.php)
 
-**EduLearn** adalah platform Learning Management System (LMS) berbasis web yang dirancang khusus untuk memenuhi kebutuhan akademis perguruan tinggi. Aplikasi ini menyediakan lingkungan pembelajaran digital yang terintegrasi, interaktif, dan aman bagi **Mahasiswa**, **Dosen**, dan **Administrator**.
+**EduLearn** adalah platform Learning Management System (LMS) berbasis web yang dirancang khusus untuk memenuhi kebutuhan akademis perguruan tinggi. Aplikasi ini dibangun mengadopsi **Custom MVC Framework (Native PHP)** yang modular, terstruktur rapi, interaktif, dan aman bagi **Mahasiswa**, **Dosen**, dan **Administrator**.
 
 ---
 
@@ -27,16 +27,16 @@
 - **Kuis & Bank Soal (Quiz Builder)**: Modul CRUD kuis interaktif dengan pengaturan passing score, batas waktu, dan formula soal.
 - **Penilaian & Feedback (Grading System)**:
   - Pemeriksaan tugas mahasiswa dengan opsi pemberian komentar/feedback.
-  - Fitur **Export Nilai ke Excel** (.xlsx) untuk kemudahan rekapitulasi akademis.
+  - Fitur **Export Nilai ke Excel** (.csv) untuk kemudahan rekapitulasi akademis.
 - **Pusat Pengumuman (Announcements)**: Penyiaran pengumuman penting secara spesifik per mata kuliah atau umum.
 - **Dashboard Analitik**: Pemantauan progres pengumpulan tugas dan statistik nilai mahasiswa.
 
 ### 🛡️ Keamanan & Infrastruktur (Security & Core Infrastructure)
+- **Custom MVC Architecture**: Front Controller (`index.php`), Centralized Router (`App.php`), Base Controller, PDO Singleton (`Database.php`).
 - **Role-Based Access Control (RBAC)**: Middleware verifikasi sesi dan otorisasi ketat berbasis peran (`student`, `lecturer`, `admin`).
 - **CSRF Token Protection**: Proteksi serangan Cross-Site Request Forgery pada seluruh submission form dan API.
 - **Database Abstraction (PDO)**: Keamanan terhadap SQL Injection menggunakan prepared statements dan koneksi terenkripsi (SSL mode).
 - **Centralized Environment (`.env`)**: Pengelolaan kredensial aman berbasis environment variable parser.
-- **Structured Error Handling**: Dynamic logging error ke log file internal tanpa mengekspos detail kredensial sistem ke end-user.
 
 ---
 
@@ -44,11 +44,11 @@
 
 | Komponen | Teknologi | Deskripsi |
 | :--- | :--- | :--- |
-| **Backend** | Native PHP 8.x | Arsitektur modular dengan PDO Database Wrapper & Custom Middleware |
+| **Arsitektur** | Custom MVC Framework | Front Controller, PSR-4 Autoloading, Centralized Routing & Dispatcher |
+| **Backend** | Native PHP 8.x | Modular Controllers & Models dengan Database Singleton Wrapper |
 | **Database** | PostgreSQL / Supabase | Relational Database Management System dengan Foreign Key Constraints |
-| **Frontend** | HTML5, CSS3, JavaScript (ES6) | Responsive UI layout dengan Chart.js & Tailwind CSS utilities |
+| **Frontend** | HTML5, CSS3, JavaScript (ES6) | Responsive UI layout dengan Chart.js & Bootstrap utilities |
 | **Security** | CSRF Guards & Hashing | `password_hash()` (Bcrypt), CSRF One-time Tokens, Input Sanitization |
-| **Export/Import** | PHP Spreadsheet Integration | Ekspor laporan nilai mahasiswa dalam format Excel |
 
 ---
 
@@ -56,33 +56,23 @@
 
 ```text
 elearning/
-├── api/                        # RESTful JSON API endpoints
-│   ├── get_announcements.php   # Endpoint data pengumuman
-│   ├── get_assignments.php     # Endpoint data tugas mahasiswa
-│   ├── get_schedule.php        # Endpoint jadwal perkuliahan
-│   ├── submit_assignment.php   # Handler pengumpulan tugas
-│   └── save_grades.php         # Handler simpan nilai dosen
+├── index.php                    # Front Controller — Single entry point
+├── app/                         # MVC Application Root
+│   ├── Core/                    # Framework Core (App, Controller, Database, Middleware)
+│   ├── Controllers/             # Domain Controllers (Auth, Student, Lecturer, Quiz, Exam, Grade, Announcement, Feedback)
+│   ├── Models/                  # Data Layer Models (User, Course, Assignment, Quiz, Exam, Grade, Schedule, etc)
+│   ├── Helpers/                 # Utility functions (grade calculation, icons, formatting)
+│   └── Views/                   # HTML Templates (auth, student, lecturer, errors)
 ├── database/                   # Skrip DDL & Seed Database
-│   ├── postgresql_schema.sql   # DDL Schema utama PostgreSQL
-│   └── seed_data.sql           # Data sampel awal (dummy data)
 ├── logs/                       # Log aktivitas & error aplikasi
 ├── uploads/                    # File penyimpanan tugas & materi
 ├── config.php                  # Konfigurasi terpusat & env parser
-├── db_connection.php           # Inisialisasi koneksi PDO PostgreSQL
-├── middleware.php              # Auth Guard & CSRF protection
-├── error_handler.php           # Error & Exception Handler
-├── helpers.php                 # Library helper utility functions
-├── dash-mahasiswa.php          # Dashboard utama mahasiswa
-├── dash-dosen.php              # Dashboard utama dosen
-├── quiz-crud-dosen.php         # Modul pembuatan kuis dosen
-├── export_excel.php            # Skrip ekspor nilai ke Excel
-├── login.html / login.php      # Autentikasi user & penanganan sesi
 └── .env.example                # Template konfigurasi environment
 ```
 
 ---
 
-## ⚡ Panduan Instalasi (Installation & Setup)
+## ⚡ Panduan Instalasi & Jalankan (Installation & Setup)
 
 ### 1. Prasyarat Sistem
 - **PHP 8.1** atau versi lebih baru.
@@ -91,58 +81,32 @@ elearning/
 
 ### 2. Clone Repository
 ```bash
-git clone https://github.com/username/elearning.git
+git clone https://github.com/Nabillah-Alimuddin/EduLearn.git
 cd elearning
 ```
 
 ### 3. Konfigurasi Environment Variable
-Salin file `.env.example` menjadi `.env` dan menyesuaikan kredensial database Anda:
+Salin file `.env.example` menjadi `.env` dan sesuaikan kredensial database:
 ```bash
 cp .env.example .env
 ```
 
-Buka `.env` dan atur parameter berikut:
-```ini
-APP_NAME=EduLearn
-APP_ENV=development
-APP_DEBUG=true
-APP_TIMEZONE=Asia/Makassar
-
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_NAME=elearning_db
-DB_USER=postgres
-DB_PASSWORD=your_password
-DB_SSLMODE=prefer
-```
-
-### 4. Import Database Schema
-Jalankan file SQL schema ke PostgreSQL / Supabase instance Anda:
-```bash
-psql -h 127.0.0.1 -U postgres -d elearning_db -f database/postgresql_schema.sql
-psql -h 127.0.0.1 -U postgres -d elearning_db -f database/seed_data.sql
-```
-*Atau jalankan skrip `run_migration.php` melalui terminal/browser untuk eksekusi migrasi otomatis.*
-
-### 5. Jalankan Aplikasi
-Jika menggunakan XAMPP, tempatkan folder ini di `htdocs` dan akses melalui browser:
+### 4. Jalankan Aplikasi
+Akses via XAMPP browser:
 ```text
-http://localhost/elearning/landingpage.html
+http://localhost/elearning/index.php
 ```
-Atau gunakan PHP Built-in Server:
+Atau jalankan PHP Built-in Server:
 ```bash
 php -S localhost:8000
 ```
-Buka `http://localhost:8000/landingpage.html` di browser Anda.
+Buka `http://localhost:8000/index.php` di browser Anda.
 
 ---
 
 ## 🔒 Fitur Keamanan (Security Highlights)
 
 - **Prepared Statements**: Seluruh kueri basis data menggunakan PDO `prepare()` dan parameter binding untuk mencegah ancaman **SQL Injection**.
-- **CSRF Token Validation**: Setiap form permintaan data yang sensitif dilindungi oleh fungsi `verify_csrf_token()`.
+- **CSRF Token Validation**: Setiap form permintaan data yang sensitif dilindungi oleh `Middleware::verifyCsrfToken()`.
 - **Session Protection**: Pemanfaatan `session_regenerate_id()` dan pembersihan sesi berkala untuk mencegah **Session Hijacking**.
-- **Password Hashing**: Kata sandi disimpan secara aman mengodekan algoritma Bcrypt via `password_hash()`.
-
----
-
+- **Password Hashing**: Kata sandi disimpan secara aman menggunakan Bcrypt via `password_hash()`.
