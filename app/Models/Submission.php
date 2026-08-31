@@ -45,4 +45,35 @@ class Submission {
 
         return $filePath;
     }
+
+    public function getSubmissionsForAssignment(int $assignmentId): array {
+        $sql = "
+            SELECT s.*, u.full_name, u.nim
+            FROM submissions s
+            JOIN users u ON s.student_id = u.user_id
+            WHERE s.assignment_id = ?
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$assignmentId]);
+        return $stmt->fetchAll();
+    }
+
+    public function getSubmissionsForCourse(int $courseId): array {
+        $sql = "
+            SELECT s.*, a.title AS assignment_title, a.due_date, u.full_name, u.nim
+            FROM submissions s
+            JOIN assignments a ON s.assignment_id = a.assignment_id
+            JOIN users u ON s.student_id = u.user_id
+            WHERE a.course_id = ?
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$courseId]);
+        return $stmt->fetchAll();
+    }
+
+    public function updateGradeAndFeedback(int $assignmentId, int $studentId, float $grade, ?string $feedback): bool {
+        $sql = "UPDATE submissions SET grade = ?, feedback = ? WHERE assignment_id = ? AND student_id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$grade, $feedback, $assignmentId, $studentId]);
+    }
 }

@@ -61,4 +61,11 @@ class Grade {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$studentId, $courseId, $itemId, $gradeType, $gradeValue, $gradeLetter, $gradePoints, $feedback, $gradedBy]);
     }
+
+    public function getGradesForCourse(int $courseId): array {
+        $sql = "SELECT * FROM grades WHERE course_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$courseId]);
+        return $stmt->fetchAll();
+    }
 }

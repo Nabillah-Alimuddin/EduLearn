@@ -39,6 +39,15 @@ class App {
                 $this->render404("Method [$methodName] tidak ditemukan.");
                 return;
             }
+        } else {
+            // Default method resolution when method is omitted from URL
+            if (method_exists($this->controller, 'index')) {
+                $this->method = 'index';
+            } elseif (method_exists($this->controller, 'dashboard')) {
+                $this->method = 'dashboard';
+            } elseif (method_exists($this->controller, 'landing')) {
+                $this->method = 'landing';
+            }
         }
 
         // 3. Parameters

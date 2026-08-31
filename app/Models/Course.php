@@ -13,11 +13,11 @@ class Course {
 
     public function getEnrolledCoursesForStudent(int $studentId): array {
         $sql = "
-            SELECT ce.course_id, c.course_name, c.course_code
+            SELECT ce.course_id, c.course_name, c.course_code, c.credits, u.full_name AS lecturer_name
             FROM course_enrollments ce
             JOIN courses c ON ce.course_id = c.course_id
-            WHERE ce.student_id = ? 
-            AND c.course_name NOT IN ('Pendidikan Agama', 'Pendidikan Kewarganegaraan', 'Fotografi', 'Basis Data', 'Multimedia')
+            LEFT JOIN users u ON c.lecturer_id = u.user_id
+            WHERE ce.student_id = ?
             ORDER BY c.course_name ASC
         ";
         $stmt = $this->db->prepare($sql);
