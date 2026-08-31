@@ -93,29 +93,35 @@ class GradeController extends Controller {
 
         /** @var \App\Models\Grade $gradeModel */
         $gradeModel = $this->model('Grade');
+        /** @var \App\Models\Submission $submissionModel */
+        $submissionModel = $this->model('Submission');
 
         foreach ($gradesData as $studentId => $components) {
             $studentId = (int)$studentId;
             if (isset($components['Assignment']) && $components['Assignment'] !== '') {
                 $val = (float)$components['Assignment'];
                 $fb = $components['feedback'] ?? null;
-                $itemId = $components['Assignment_item_id'] ?? $assignmentId;
-                $gradeModel->saveGradeItem($studentId, $courseId, (int)$itemId, 'Assignment', $val, $fb, $lecturerId);
+                $itemId = (int)($components['Assignment_item_id'] ?? $assignmentId);
+                $gradeModel->saveGradeItem($studentId, $courseId, $itemId, 'Assignment', $val, $fb, $lecturerId);
+                
+                if ($itemId > 0) {
+                    $submissionModel->updateGradeAndFeedback($itemId, $studentId, $val, $fb);
+                }
             }
             if (isset($components['UTS']) && $components['UTS'] !== '') {
                 $val = (float)$components['UTS'];
-                $itemId = $components['UTS_item_id'] ?? $courseId;
-                $gradeModel->saveGradeItem($studentId, $courseId, (int)$itemId, 'UTS', $val, null, $lecturerId);
+                $itemId = (int)($components['UTS_item_id'] ?? $courseId);
+                $gradeModel->saveGradeItem($studentId, $courseId, $itemId, 'UTS', $val, null, $lecturerId);
             }
             if (isset($components['UAS']) && $components['UAS'] !== '') {
                 $val = (float)$components['UAS'];
-                $itemId = $components['UAS_item_id'] ?? $courseId;
-                $gradeModel->saveGradeItem($studentId, $courseId, (int)$itemId, 'UAS', $val, null, $lecturerId);
+                $itemId = (int)($components['UAS_item_id'] ?? $courseId);
+                $gradeModel->saveGradeItem($studentId, $courseId, $itemId, 'UAS', $val, null, $lecturerId);
             }
             if (isset($components['Partisipasi']) && $components['Partisipasi'] !== '') {
                 $val = (float)$components['Partisipasi'];
-                $itemId = $components['Partisipasi_item_id'] ?? $courseId;
-                $gradeModel->saveGradeItem($studentId, $courseId, (int)$itemId, 'Partisipasi', $val, null, $lecturerId);
+                $itemId = (int)($components['Partisipasi_item_id'] ?? $courseId);
+                $gradeModel->saveGradeItem($studentId, $courseId, $itemId, 'Partisipasi', $val, null, $lecturerId);
             }
         }
 

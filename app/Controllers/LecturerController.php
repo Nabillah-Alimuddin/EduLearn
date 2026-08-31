@@ -3,8 +3,13 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Middleware;
+use App\Helpers\StorageHelper;
 
 class LecturerController extends Controller {
+
+    public function index(): void {
+        $this->dashboard();
+    }
 
     public function __construct() {
         Middleware::requireRole('lecturer');
@@ -143,10 +148,14 @@ class LecturerController extends Controller {
 
                 foreach ($_FILES['uploaded_file']['name'] as $key => $uploadedFileName) {
                     if ($_FILES['uploaded_file']['error'][$key] === UPLOAD_ERR_OK) {
-                        $uniqueFileName = uniqid() . '_' . basename($uploadedFileName);
-                        $targetFilePath = $targetDir . $uniqueFileName;
-                        move_uploaded_file($_FILES['uploaded_file']['tmp_name'][$key], $targetFilePath);
-
+                        $singleFile = [
+                            'name'     => $_FILES['uploaded_file']['name'][$key],
+                            'type'     => $_FILES['uploaded_file']['type'][$key],
+                            'tmp_name' => $_FILES['uploaded_file']['tmp_name'][$key],
+                            'error'    => $_FILES['uploaded_file']['error'][$key],
+                            'size'     => $_FILES['uploaded_file']['size'][$key]
+                        ];
+                        $targetFilePath = StorageHelper::upload($singleFile, 'materials');
                         $ext = strtolower(pathinfo($uploadedFileName, PATHINFO_EXTENSION));
 
                         $assignmentModel->create([
@@ -221,10 +230,115 @@ class LecturerController extends Controller {
         $courseModel = $this->model('Course');
         $courses = $courseModel->getCoursesByLecturer($lecturerId);
 
+        /** @var \App\Models\Assignment $assignmentModel */
+        $assignmentModel = $this->model('Assignment');
+        /** @var \App\Models\Submission $submissionModel */
+        $submissionModel = $this->model('Submission');
+
+        $coursesProgress = [];
+        $totalStudentsAll = 0;
+        $totalAssignmentsAll = 0;
+        $totalPossibleSubmissions = 0;
+        $totalActualSubmissions = 0;
+
+        foreach ($courses as $c) {
+            $cId = $c['course_id'];
+            $students = $courseModel->getStudentsEnrolled($cId);
+            $assignments = $assignmentModel->getByCourse($cId);
+
+            $studentCount = count($students);
+            $assignmentCount = count($assignments);
+
+            $totalStudentsAll += $studentCount;
+            $totalAssignmentsAll += $assignmentCount;
+
+            $assignmentsData = [];
+            foreach ($assignments as $a) {
+                $aId = $a['assignment_id'];
+                $subs = $submissionModel->getSubmissionsForAssignment($aId);
+
+                $subsMap = [];
+                foreach ($subs as $sub) {
+                    $subsMap[$sub['student_id']] = $sub;
+                }
+
+                $completedCount = 0;
+                $lateCount = 0;
+                $notSubmittedCount = 0;
+
+                $studentStatuses = [];
+                $dueDateTs = strtotime($a['due_date']);
+
+                foreach ($students as $s) {
+                    $sId = $s['user_id'];
+                    $sub = $subsMap[$sId] ?? null;
+
+                    $status = 'not_submitted';
+                    if ($sub) {
+                        $subTs = strtotime($sub['submitted_at']);
+                        if ($subTs > $dueDateTs) {
+                            $status = 'late';
+                            $lateCount++;
+                        } else {
+                            $status = 'completed';
+                            $completedCount++;
+                        }
+                        $totalActualSubmissions++;
+                    } else {
+                        $notSubmittedCount++;
+                    }
+
+                    $totalPossibleSubmissions++;
+
+                    $studentStatuses[] = [
+                        'student_id'   => $sId,
+                        'full_name'    => $s['full_name'],
+                        'nim'          => $s['nim'],
+                        'status'       => $status,
+                        'submitted_at' => $sub['submitted_at'] ?? null,
+                        'file_path'    => $sub['submission_file_path'] ?? null
+                    ];
+                }
+
+                $assignmentsData[] = [
+                    'assignment_id' => $aId,
+                    'title'         => $a['title'],
+                    'due_date'      => $a['due_date'],
+                    'file_path'     => $a['file_path'],
+                    'completed'     => $completedCount,
+                    'late'          => $lateCount,
+                    'not_submitted' => $notSubmittedCount,
+                    'students'      => $studentStatuses
+                ];
+            }
+
+            $coursesProgress[] = [
+                'course_id'   => $cId,
+                'course_name' => $c['course_name'],
+                'course_code' => $c['course_code'],
+                'credits'     => $c['credits'],
+                'students'    => $students,
+                'assignments' => $assignmentsData
+            ];
+        }
+
+        $overallCompletionRate = $totalPossibleSubmissions > 0 
+            ? round(($totalActualSubmissions / $totalPossibleSubmissions) * 100, 1) 
+            : 0;
+
+        $summary = [
+            'total_classes'           => count($courses),
+            'total_students'          => $totalStudentsAll,
+            'total_assignments'       => $totalAssignmentsAll,
+            'overall_completion_rate' => $overallCompletionRate
+        ];
+
         $this->view('lecturer/progress-tugas', [
-            'courses' => $courses
+            'coursesProgress' => $coursesProgress,
+            'summary'         => $summary
         ]);
     }
+
 
     public function laporan(): void {
         $lecturerId = Middleware::currentUserId();
@@ -235,11 +349,31 @@ class LecturerController extends Controller {
 
         $selectedCourseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : ($courses[0]['course_id'] ?? null);
 
+        $students = [];
+        $gradesMap = [];
+
+        if ($selectedCourseId) {
+            $students = $courseModel->getStudentsEnrolled($selectedCourseId);
+
+            /** @var \App\Models\Grade $gradeModel */
+            $gradeModel = $this->model('Grade');
+            $rawGrades = $gradeModel->getGradesForCourse($selectedCourseId);
+
+            foreach ($rawGrades as $g) {
+                $sId = $g['student_id'];
+                $type = $g['grade_type'];
+                $gradesMap[$sId][$type] = $g['grade_value'];
+            }
+        }
+
         $this->view('lecturer/laporan', [
             'courses'          => $courses,
-            'selectedCourseId' => $selectedCourseId
+            'selectedCourseId' => $selectedCourseId,
+            'students'         => $students,
+            'gradesMap'        => $gradesMap
         ]);
     }
+
 
     public function inputNilai(): void {
         $lecturerId = Middleware::currentUserId();
@@ -248,16 +382,57 @@ class LecturerController extends Controller {
         $courseModel = $this->model('Course');
         $courses = $courseModel->getCoursesByLecturer($lecturerId);
 
-        $selectedCourseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : null;
+        $selectedCourseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : ($courses[0]['course_id'] ?? null);
+        $selectedAssignmentId = isset($_GET['assignment_id']) ? (int)$_GET['assignment_id'] : null;
 
         /** @var \App\Models\Assignment $assignmentModel */
         $assignmentModel = $this->model('Assignment');
         $assignments = $selectedCourseId ? $assignmentModel->getByCourse($selectedCourseId) : [];
 
+        if (empty($selectedAssignmentId) && !empty($assignments)) {
+            $selectedAssignmentId = $assignments[0]['assignment_id'];
+        }
+
+        $students = [];
+        $gradesMap = [];
+        $submissionsMap = [];
+
+        if ($selectedCourseId) {
+            $students = $courseModel->getStudentsEnrolled($selectedCourseId);
+
+            /** @var \App\Models\Grade $gradeModel */
+            $gradeModel = $this->model('Grade');
+            $rawGrades = $gradeModel->getGradesForCourse($selectedCourseId);
+
+            foreach ($rawGrades as $g) {
+                $sId = $g['student_id'];
+                $type = $g['grade_type'];
+                $itemId = $g['item_id'] ?? 0;
+                $gradesMap[$sId][$type][$itemId] = [
+                    'value'    => $g['grade_value'],
+                    'feedback' => $g['feedback']
+                ];
+            }
+
+            if ($selectedAssignmentId) {
+                /** @var \App\Models\Submission $submissionModel */
+                $submissionModel = $this->model('Submission');
+                $rawSubs = $submissionModel->getSubmissionsForAssignment($selectedAssignmentId);
+                foreach ($rawSubs as $sub) {
+                    $submissionsMap[$sub['student_id']] = $sub;
+                }
+            }
+        }
+
         $this->view('lecturer/input-nilai', [
-            'courses'          => $courses,
-            'assignments'      => $assignments,
-            'selectedCourseId' => $selectedCourseId
+            'courses'              => $courses,
+            'assignments'          => $assignments,
+            'selectedCourseId'     => $selectedCourseId,
+            'selectedAssignmentId' => $selectedAssignmentId,
+            'students'             => $students,
+            'gradesMap'            => $gradesMap,
+            'submissionsMap'       => $submissionsMap
         ]);
     }
 }
+

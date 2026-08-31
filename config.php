@@ -37,6 +37,14 @@ define('DB_PASSWORD', $env['DB_PASSWORD'] ?? '');
 define('DB_SSLMODE', $env['DB_SSLMODE'] ?? 'require');
 
 // ============================================
+// Storage Constants (Local / Supabase Cloud)
+// ============================================
+define('STORAGE_DRIVER', $env['STORAGE_DRIVER'] ?? 'local'); // 'local' atau 'supabase'
+define('SUPABASE_STORAGE_URL', $env['SUPABASE_STORAGE_URL'] ?? '');
+define('SUPABASE_ANON_KEY', $env['SUPABASE_ANON_KEY'] ?? '');
+define('SUPABASE_BUCKET', $env['SUPABASE_BUCKET'] ?? 'elearning');
+
+// ============================================
 // Timezone
 // ============================================
 date_default_timezone_set(APP_TIMEZONE);

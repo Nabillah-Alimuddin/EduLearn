@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Middleware;
+use App\Helpers\StorageHelper;
 
 class ExamController extends Controller {
 
@@ -19,14 +20,7 @@ class ExamController extends Controller {
 
             $filePath = null;
             if (isset($_FILES['submission_file']) && $_FILES['submission_file']['error'] === UPLOAD_ERR_OK) {
-                $targetDir = "uploads/submissions/";
-                if (!is_dir($targetDir)) {
-                    mkdir($targetDir, 0777, true);
-                }
-                $ext = pathinfo($_FILES['submission_file']['name'], PATHINFO_EXTENSION);
-                $uniqueName = uniqid($studentId . '_' . $examId . '_', true) . '.' . $ext;
-                $filePath = $targetDir . $uniqueName;
-                move_uploaded_file($_FILES['submission_file']['tmp_name'], $filePath);
+                $filePath = StorageHelper::upload($_FILES['submission_file'], 'exams');
             }
 
             $examModel->recordSubmission($examId, $studentId, $filePath, $submissionText);

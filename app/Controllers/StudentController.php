@@ -3,8 +3,13 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Middleware;
+use App\Helpers\StorageHelper;
 
 class StudentController extends Controller {
+
+    public function index(): void {
+        $this->dashboard();
+    }
 
     public function __construct() {
         Middleware::requireRole('student');
@@ -70,14 +75,8 @@ class StudentController extends Controller {
 
         // Handle Profile Picture upload
         if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = 'uploads/profiles/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-            $fileName = uniqid($studentId . '_') . '_' . basename($_FILES['profile_picture']['name']);
-            $filePath = $uploadDir . $fileName;
-
-            if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $filePath)) {
+            $filePath = StorageHelper::upload($_FILES['profile_picture'], 'profiles');
+            if ($filePath) {
                 $userModel->updateProfilePicture($studentId, $filePath);
             }
         }
@@ -163,16 +162,22 @@ class StudentController extends Controller {
         $userModel = $this->model('User');
         $studentData = $userModel->getStudentInfo($studentId);
 
+        /** @var \App\Models\Course $courseModel */
+        $courseModel = $this->model('Course');
+        $enrolledCourses = $courseModel->getEnrolledCoursesForStudent($studentId);
+
         /** @var \App\Models\Grade $gradeModel */
         $gradeModel = $this->model('Grade');
-        $gradedCoursesRaw = $gradeModel->getGradedCoursesForStudent($studentId);
         $allGradesRaw = $gradeModel->getGradesForStudent($studentId);
 
         $gradedCourses = [];
-        foreach ($gradedCoursesRaw as $row) {
+        foreach ($enrolledCourses as $row) {
             $gradedCourses[$row['course_id']] = [
+                'course_id'      => $row['course_id'],
                 'course_name'    => $row['course_name'],
-                'credits'        => $row['credits'],
+                'course_code'    => $row['course_code'],
+                'credits'        => $row['credits'] ?? 3,
+                'lecturer_name'  => $row['lecturer_name'] ?? '-',
                 'grades_by_type' => [],
                 'final_grade'    => '-',
                 'grade_letter'   => '-',
@@ -198,8 +203,14 @@ class StudentController extends Controller {
             $ua = $cData['grades_by_type']['UAS'] ?? null;
             $p = $cData['grades_by_type']['Partisipasi'] ?? null;
 
-            if ($t !== null && $u !== null && $ua !== null && $p !== null) {
-                $finalScore = ($t * 0.20) + ($u * 0.30) + ($ua * 0.40) + ($p * 0.10);
+            // If at least one component grade exists, calculate weighted score
+            if ($t !== null || $u !== null || $ua !== null || $p !== null) {
+                $scoreT = $t ?? 0;
+                $scoreU = $u ?? 0;
+                $scoreUA = $ua ?? 0;
+                $scoreP = $p ?? 0;
+
+                $finalScore = ($scoreT * 0.20) + ($scoreU * 0.30) + ($scoreUA * 0.40) + ($scoreP * 0.10);
                 $cData['final_grade'] = round($finalScore, 2);
 
                 $calc = calculate_grade_letter_and_points($finalScore);
@@ -221,6 +232,7 @@ class StudentController extends Controller {
             'ipk'           => $ipk
         ]);
     }
+
 
     public function deadline(): void {
         $studentId = Middleware::currentUserId();
@@ -266,14 +278,7 @@ class StudentController extends Controller {
 
             $filePath = null;
             if (isset($_FILES['submission_file']) && $_FILES['submission_file']['error'] === UPLOAD_ERR_OK) {
-                $targetDir = "uploads/submissions/";
-                if (!is_dir($targetDir)) {
-                    mkdir($targetDir, 0777, true);
-                }
-                $ext = pathinfo($_FILES['submission_file']['name'], PATHINFO_EXTENSION);
-                $uniqueName = uniqid($studentId . '_' . $assignmentId . '_') . '.' . $ext;
-                $filePath = $targetDir . $uniqueName;
-                move_uploaded_file($_FILES['submission_file']['tmp_name'], $filePath);
+                $filePath = StorageHelper::upload($_FILES['submission_file'], 'submissions');
             }
 
             if ($submissionModel->submit($assignmentId, $studentId, $filePath, $submissionText)) {
