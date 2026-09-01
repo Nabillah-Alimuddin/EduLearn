@@ -8,7 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body { background: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .header { background: linear-gradient(135deg, #63A3F1, #4F8A9E); color: white; padding: 2rem 0; border-radius: 0 0 20px 20px; }
+        .header { background: linear-gradient(135deg, #63A3F1 0%, #4F8A9E 100%); color: white; padding: 2.2rem 0; border-radius: 0 0 20px 20px; box-shadow: 0 6px 20px rgba(79, 138, 158, 0.2); margin-bottom: 2rem; }
         .card-custom { border-radius: 15px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
         .stat-card { border-radius: 12px; padding: 1.25rem; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
         .stat-card h3 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0; }

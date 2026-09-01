@@ -19,12 +19,12 @@
         }
 
         .hero-header {
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #63A3F1 0%, #4F8A9E 100%);
             color: white;
-            padding: 3rem 0 2.5rem;
-            border-radius: 0 0 25px 25px;
-            box-shadow: 0 5px 20px rgba(79, 138, 158, 0.2);
-            margin-bottom: 2.5rem;
+            padding: 2.2rem 0;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 6px 20px rgba(79, 138, 158, 0.2);
+            margin-bottom: 2rem;
         }
 
         .quiz-card {

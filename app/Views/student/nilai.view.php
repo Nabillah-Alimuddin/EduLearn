@@ -8,9 +8,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body { background: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .header { background: linear-gradient(135deg, #4A90E2, #7FB3D3); color: white; padding: 2rem 0; border-radius: 0 0 20px 20px; }
-        .gpa-card { background: white; border-radius: 15px; padding: 1.5rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 5px solid #4A90E2; }
-        .gpa-number { font-size: 2.8rem; font-weight: 700; color: #4A90E2; line-height: 1; }
+        .header { background: linear-gradient(135deg, #63A3F1 0%, #4F8A9E 100%); color: white; padding: 2.2rem 0; border-radius: 0 0 20px 20px; box-shadow: 0 6px 20px rgba(79, 138, 158, 0.2); margin-bottom: 2rem; }
+        .gpa-card { background: white; border-radius: 15px; padding: 1.5rem; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 5px solid #4F8A9E; }
+        .gpa-number { font-size: 2.8rem; font-weight: 700; color: #4F8A9E; line-height: 1; }
         @media print {
             .no-print { display: none !important; }
             .header { background: none; color: black; padding: 0; }

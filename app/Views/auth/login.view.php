@@ -44,7 +44,7 @@
 
         .login-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 35px 70px rgba(79, 138, 158, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 35px 70px rgba(79, 138, 158, 0.35);
         }
 
         .login-header {
@@ -55,29 +55,15 @@
             position: relative;
         }
 
-        .login-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="60" cy="70" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="30" cy="80" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
-        }
-
         .login-header h2 {
             margin: 0;
             font-weight: 700;
             font-size: 1.8rem;
-            position: relative;
-            z-index: 1;
         }
 
         .login-header p {
             margin: 0.5rem 0 0 0;
             opacity: 0.9;
-            position: relative;
-            z-index: 1;
         }
 
         .login-body {
@@ -91,7 +77,7 @@
             background: var(--white);
             border-radius: 15px;
             padding: 0.5rem;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
         }
 
         .role-option {
@@ -111,18 +97,11 @@
             background: linear-gradient(135deg, var(--secondary-blue), var(--dark-teal));
             color: var(--white);
             box-shadow: 0 6px 20px rgba(99, 163, 241, 0.4);
-            transform: translateY(-3px) scale(1.05);
-        }
-
-        .role-option:hover:not(.active) {
-            background: linear-gradient(135deg, var(--primary-blue), rgba(99, 163, 241, 0.3));
-            color: var(--dark-teal);
             transform: translateY(-2px);
         }
 
         .form-group {
             margin-bottom: 1.5rem;
-            position: relative;
         }
 
         .form-label {
@@ -134,27 +113,19 @@
             gap: 0.5rem;
         }
 
-        .label-icon {
-            color: var(--dark-teal);
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-        }
-
         .form-control {
             border: 2px solid #e8f0fe;
             border-radius: 15px;
-            padding: 1rem 1rem;
+            padding: 0.9rem 1rem;
             font-size: 1rem;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             background: var(--white);
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         .form-control:focus {
             border-color: var(--secondary-blue);
-            box-shadow: 0 0 0 0.3rem rgba(99, 163, 241, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 0 0 0.3rem rgba(99, 163, 241, 0.15);
             background: var(--white);
-            transform: translateY(-2px);
         }
 
         .btn-login {
@@ -166,16 +137,14 @@
             font-size: 1.1rem;
             width: 100%;
             color: var(--white);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
+            transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .btn-login:hover {
             background: linear-gradient(135deg, var(--dark-teal), var(--secondary-blue));
-            transform: translateY(-3px) scale(1.02);
+            transform: translateY(-3px);
             box-shadow: 0 15px 35px rgba(99, 163, 241, 0.5);
         }
 
@@ -187,7 +156,7 @@
         .forgot-password a {
             color: var(--dark-teal);
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .login-footer {
@@ -197,22 +166,13 @@
             color: var(--dark-teal);
             font-size: 0.9rem;
         }
-
-        .animate-fade-in {
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="login-card animate-fade-in">
+        <div class="login-card">
             <div class="login-header">
-                <h2><i class="fas fa-graduation-cap me-2"></i>Sistem Akademik</h2>
+                <h2><i class="fas fa-graduation-cap me-2"></i>EduLearn LMS</h2>
                 <p>Silakan masuk ke akun Anda</p>
             </div>
             
@@ -230,22 +190,20 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-user label-icon"></i>
-                            Username
+                            <i class="fas fa-user"></i> Username / Identitas
                         </label>
                         <input type="text" class="form-control" id="username" name="username" placeholder="Masukkan NIM Anda" required>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-lock label-icon"></i>
-                            Password
+                            <i class="fas fa-lock"></i> Password
                         </label>
                         <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan password Anda" required>
                     </div>
 
                     <button type="submit" class="btn btn-login">
-                        <i class="fas fa-sign-in-alt me-2"></i>Masuk
+                        <i class="fas fa-sign-in-alt me-2"></i>Masuk Sekarang
                     </button>
 
                     <div class="forgot-password">
@@ -255,7 +213,7 @@
             </div>
 
             <div class="login-footer">
-                <small>&copy; 2026 EduLearn. Semua hak dilindungi.</small>
+                <small>&copy; 2026 EduLearn. All rights reserved.</small>
             </div>
         </div>
     </div>
