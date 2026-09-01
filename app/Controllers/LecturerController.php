@@ -155,7 +155,7 @@ class LecturerController extends Controller {
                             'error'    => $_FILES['uploaded_file']['error'][$key],
                             'size'     => $_FILES['uploaded_file']['size'][$key]
                         ];
-                        $targetFilePath = StorageHelper::upload($singleFile, 'materials');
+                        $targetFilePath = StorageHelper::upload($singleFile, 'dosen/materi');
                         $ext = strtolower(pathinfo($uploadedFileName, PATHINFO_EXTENSION));
 
                         $assignmentModel->create([

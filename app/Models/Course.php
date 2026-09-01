@@ -75,4 +75,39 @@ class Course {
         $stmt->execute([$lecturerId]);
         return (int)$stmt->fetchColumn();
     }
+
+    public function getAllCourses(): array {
+        $sql = "
+            SELECT c.*, u.full_name AS lecturer_name, u.gelar,
+                   (SELECT COUNT(ce.student_id) FROM course_enrollments ce WHERE ce.course_id = c.course_id) AS total_enrolled
+            FROM courses c
+            LEFT JOIN users u ON c.lecturer_id = u.user_id
+            ORDER BY c.course_name ASC
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function isStudentEnrolled(int $studentId, int $courseId): bool {
+        $sql = "SELECT enrollment_id FROM course_enrollments WHERE student_id = ? AND course_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$studentId, $courseId]);
+        return (bool)$stmt->fetch();
+    }
+
+    public function enrollStudent(int $studentId, int $courseId): bool {
+        if ($this->isStudentEnrolled($studentId, $courseId)) {
+            return true;
+        }
+        $sql = "INSERT INTO course_enrollments (student_id, course_id, enrolled_at) VALUES (?, ?, NOW())";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$studentId, $courseId]);
+    }
+
+    public function unenrollStudent(int $studentId, int $courseId): bool {
+        $sql = "DELETE FROM course_enrollments WHERE student_id = ? AND course_id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$studentId, $courseId]);
+    }
 }

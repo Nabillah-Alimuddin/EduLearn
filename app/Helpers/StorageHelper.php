@@ -46,39 +46,63 @@ class StorageHelper {
         $bucket = defined('SUPABASE_BUCKET') ? SUPABASE_BUCKET : 'elearning';
 
         if (empty($baseUrl) || empty($apiKey)) {
-            // Fallback to local if config missing
+            self::logError("Missing SUPABASE_STORAGE_URL or SUPABASE_ANON_KEY in configuration.");
+            return self::uploadLocal($fileInfo, $folder);
+        }
+
+        $filePath = $fileInfo['tmp_name'];
+        if (!file_exists($filePath) || !is_readable($filePath)) {
+            self::logError("Tmp file not readable: {$filePath}");
             return self::uploadLocal($fileInfo, $folder);
         }
 
         $ext = pathinfo($fileInfo['name'], PATHINFO_EXTENSION);
-        $uniqueName = trim($folder, '/') . '/' . uniqid(date('Ymd_His_') . '_') . '.' . strtolower($ext);
+        $uniqueName = trim($folder, '/') . '/' . date('Ymd_His') . '_' . uniqid() . '.' . strtolower($ext);
 
         $uploadUrl = "{$baseUrl}/object/{$bucket}/{$uniqueName}";
+        $fileSize = filesize($filePath);
 
-        $fileData = file_get_contents($fileInfo['tmp_name']);
-        $mimeType = $fileInfo['type'] ?? 'application/octet-stream';
+        // Advanced Zero-RAM Streaming Upload via PHP File Pointer
+        $fp = fopen($filePath, 'r');
+        if (!$fp) {
+            return self::uploadLocal($fileInfo, $folder);
+        }
 
         $ch = curl_init($uploadUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $fileData);
+        curl_setopt($ch, CURLOPT_INFILE, $fp);
+        curl_setopt($ch, CURLOPT_INFILESIZE, $fileSize);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             "Authorization: Bearer {$apiKey}",
             "apiKey: {$apiKey}",
-            "Content-Type: {$mimeType}",
+            "Content-Type: application/octet-stream",
             "x-upsert: true"
         ]);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        fclose($fp);
         curl_close($ch);
 
         if ($httpCode >= 200 && $httpCode < 300) {
             // Return public URL from Supabase CDN
             return "{$baseUrl}/object/public/{$bucket}/{$uniqueName}";
         } else {
-            // Fallback to local if cURL fails
+            self::logError("Supabase Upload Failed (HTTP {$httpCode}): {$response} | cURL error: {$curlError} | URL: {$uploadUrl}");
+            // Fallback to local if Supabase upload fails
             return self::uploadLocal($fileInfo, $folder);
         }
+    }
+
+    private static function logError(string $message): void {
+        $logFile = __DIR__ . '/../../logs/app_error.log';
+        $logDir = dirname($logFile);
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0777, true);
+        }
+        $formatted = '[' . date('Y-m-d H:i:s') . "] [SUPABASE STORAGE] " . $message . PHP_EOL;
+        file_put_contents($logFile, $formatted, FILE_APPEND);
     }
 }

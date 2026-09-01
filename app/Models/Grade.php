@@ -46,20 +46,21 @@ class Grade {
     public function saveGradeItem(int $studentId, int $courseId, ?int $itemId, string $gradeType, float $gradeValue, ?string $feedback, int $gradedBy): bool {
         $gradeLetter = getGradeLetterPHP($gradeValue);
         $gradePoints = getGradePointsPHP($gradeLetter);
+        $itemId = $itemId ?? 0;
 
-        $sql = "
-            INSERT INTO grades (student_id, course_id, item_id, grade_type, grade_value, grade_letter, grade_points, feedback, graded_by) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
-            ON CONFLICT (student_id, course_id, item_id, grade_type) DO UPDATE SET
-                grade_value = EXCLUDED.grade_value, 
-                grade_letter = EXCLUDED.grade_letter,
-                grade_points = EXCLUDED.grade_points,
-                feedback = EXCLUDED.feedback, 
-                graded_by = EXCLUDED.graded_by,
-                graded_at = NOW()
-        ";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$studentId, $courseId, $itemId, $gradeType, $gradeValue, $gradeLetter, $gradePoints, $feedback, $gradedBy]);
+        $check = $this->db->prepare("SELECT grade_id FROM grades WHERE student_id = ? AND course_id = ? AND item_id = ? AND grade_type = ?");
+        $check->execute([$studentId, $courseId, $itemId, $gradeType]);
+        $existing = $check->fetchColumn();
+
+        if ($existing) {
+            $sql = "UPDATE grades SET grade_value = ?, grade_letter = ?, grade_points = ?, feedback = ?, graded_by = ?, graded_at = NOW() WHERE grade_id = ?";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([$gradeValue, $gradeLetter, $gradePoints, $feedback, $gradedBy, $existing]);
+        } else {
+            $sql = "INSERT INTO grades (student_id, course_id, item_id, grade_type, grade_value, grade_letter, grade_points, feedback, graded_by, graded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([$studentId, $courseId, $itemId, $gradeType, $gradeValue, $gradeLetter, $gradePoints, $feedback, $gradedBy]);
+        }
     }
 
     public function getGradesForCourse(int $courseId): array {

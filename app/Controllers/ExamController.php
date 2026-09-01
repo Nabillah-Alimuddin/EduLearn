@@ -20,7 +20,7 @@ class ExamController extends Controller {
 
             $filePath = null;
             if (isset($_FILES['submission_file']) && $_FILES['submission_file']['error'] === UPLOAD_ERR_OK) {
-                $filePath = StorageHelper::upload($_FILES['submission_file'], 'exams');
+                $filePath = StorageHelper::upload($_FILES['submission_file'], 'mahasiswa/ujian');
             }
 
             $examModel->recordSubmission($examId, $studentId, $filePath, $submissionText);

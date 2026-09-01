@@ -83,12 +83,12 @@ class GradeController extends Controller {
     public function saveCrud(): void {
         $lecturerId = Middleware::currentUserId();
 
-        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : null;
-        $assignmentId = isset($_POST['assignment_id']) ? (int)$_POST['assignment_id'] : null;
+        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+        $assignmentId = isset($_POST['assignment_id']) ? (int)$_POST['assignment_id'] : 0;
         $gradesData = $_POST['grades'] ?? [];
 
-        if (!$courseId || !$assignmentId || empty($gradesData)) {
-            Middleware::jsonError("Missing course_id, assignment_id, or grades data.");
+        if ($courseId === 0 || empty($gradesData)) {
+            Middleware::jsonError("Mata kuliah atau data nilai tidak valid.");
         }
 
         /** @var \App\Models\Grade $gradeModel */

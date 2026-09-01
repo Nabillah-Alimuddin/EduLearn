@@ -134,14 +134,85 @@ class StudentController extends Controller {
 
         /** @var \App\Models\Assignment $assignmentModel */
         $assignmentModel = $this->model('Assignment');
-        $materialsData = $assignmentModel->getByCourse($courseId);
+        $rawMaterials = $assignmentModel->getByCourse($courseId);
+
+        /** @var \App\Models\Submission $submissionModel */
+        $submissionModel = $this->model('Submission');
+
+        $materialsData = [];
+        foreach ($rawMaterials as $mat) {
+            $sub = $submissionModel->getSubmission($mat['assignment_id'], $studentId);
+            $mat['uploaded_at'] = $mat['created_at'] ?? $mat['due_date'] ?? date('Y-m-d H:i:s');
+            $mat['submission'] = $sub;
+            $materialsData[] = $mat;
+        }
+
+        /** @var \App\Models\Quiz $quizModel */
+        $quizModel = $this->model('Quiz');
+        $allQuizzes = $quizModel->getAvailableForStudent($studentId);
+        $courseQuizzes = array_values(array_filter($allQuizzes, function($q) use ($courseId) {
+            return (int)($q['course_id'] ?? 0) === $courseId || (int)($q['quiz_id'] ?? 0) === $courseId;
+        }));
+
+        /** @var \App\Models\Announcement $announcementModel */
+        $announcementModel = $this->model('Announcement');
+        $announcements = $announcementModel->getForCourse($courseId);
 
         $this->view('student/kelas', [
             'courseDetails' => $courseDetails,
             'materialsData' => $materialsData,
+            'courseQuizzes' => $courseQuizzes,
+            'announcements' => $announcements,
             'courseId'      => $courseId
         ]);
     }
+
+    public function krs(): void {
+        $studentId = Middleware::currentUserId();
+
+        /** @var \App\Models\Course $courseModel */
+        $courseModel = $this->model('Course');
+        $allCourses = $courseModel->getAllCourses();
+        $enrolledCourses = $courseModel->getEnrolledCoursesForStudent($studentId);
+
+        $enrolledIds = array_column($enrolledCourses, 'course_id');
+
+        foreach ($allCourses as &$c) {
+            $c['is_enrolled'] = in_array($c['course_id'], $enrolledIds);
+        }
+
+        $this->view('student/krs', [
+            'allCourses'      => $allCourses,
+            'enrolledCourses' => $enrolledCourses
+        ]);
+    }
+
+    public function enrollCourse(): void {
+        $studentId = Middleware::currentUserId();
+        $courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+
+        if ($courseId > 0) {
+            /** @var \App\Models\Course $courseModel */
+            $courseModel = $this->model('Course');
+            $courseModel->enrollStudent($studentId, $courseId);
+        }
+
+        $this->redirect('index.php?url=student/krs');
+    }
+
+    public function dropCourse(): void {
+        $studentId = Middleware::currentUserId();
+        $courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+
+        if ($courseId > 0) {
+            /** @var \App\Models\Course $courseModel */
+            $courseModel = $this->model('Course');
+            $courseModel->unenrollStudent($studentId, $courseId);
+        }
+
+        $this->redirect('index.php?url=student/krs');
+    }
+
 
     public function jadwal(): void {
         $studentId = Middleware::currentUserId();
@@ -278,7 +349,7 @@ class StudentController extends Controller {
 
             $filePath = null;
             if (isset($_FILES['submission_file']) && $_FILES['submission_file']['error'] === UPLOAD_ERR_OK) {
-                $filePath = StorageHelper::upload($_FILES['submission_file'], 'submissions');
+                $filePath = StorageHelper::upload($_FILES['submission_file'], 'mahasiswa/submissions');
             }
 
             if ($submissionModel->submit($assignmentId, $studentId, $filePath, $submissionText)) {

@@ -63,4 +63,17 @@ class Announcement {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$announcementId, $lecturerId]);
     }
+
+    public function getForCourse(int $courseId): array {
+        $sql = "
+            SELECT a.*, u.full_name AS lecturer_full_name
+            FROM announcements a
+            LEFT JOIN users u ON a.lecturer_id = u.user_id
+            WHERE a.course_id = ? OR a.course_id IS NULL
+            ORDER BY a.published_at DESC
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$courseId]);
+        return $stmt->fetchAll();
+    }
 }
